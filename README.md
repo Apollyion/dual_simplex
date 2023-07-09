@@ -19,7 +19,7 @@ pip install numpy
 
 Antes de executar o código, certifique-se de ter o problema que deseja resolver no formato de um arquivo de texto (.txt). O arquivo deve ser colocado na pasta "problemas" no diretório do projeto.
 
-Certifique-se de que o problema esteja no formato correto, seguindo as convenções criadas para o trabalho. Caso não a formatação não esteja correta, o problema pode não ser resolvido corretamente.
+Certifique-se de que o problema esteja no formato correto, seguindo as convenções criadas para o trabalho e exemplificadas no arquivo `modelo.md`. Caso não a formatação não esteja correta, o problema pode não ser resolvido corretamente.
 
 ## Executando o código
 
