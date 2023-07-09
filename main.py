@@ -21,13 +21,22 @@ A_fase1, c_fase1, tipo_variavel_fase1= ds.cria_primeira_fase(A, c, tipo_variavel
 print("PROBLEMA DE PRIMEIRA FASE DO SIMPLEX:")
 ds.imprimir_primeira_fase(A_fase1, b, c_fase1, tipo_variavel_fase1)
 B_inv, B, N, c_B, c_N, base_indices, org_B, org_N = ds.simplex_primeira_fase(A_fase1, b, c_fase1,tipo_variavel_fase1)
-
+ds.imprime_resultado(A_fase1, b, c_fase1, tipo_variavel_fase1, base_indices)
 print('\n'+ '----------------------------------' + '\n')
 A_aux, b_aux, c_aux, tipo_variavel, base_indices = ds.criar_problema_auxiliar(A_fase1, b, c, tipo_variavel_fase1, base_indices)
 print("PROBLEMA AUXILIAR DO SIMPLEX:")
 ds.imprimir_auxiliar(A_aux, b_aux, c_aux, tipo_variavel, base_indices)
 B_inv, B, N, c_B, c_N, base_indices, org_B, org_N  = ds.simplex(A_aux, b_aux, c_aux, base_indices)
+print("RESULTADO PARA O PROBLEMA SIMPLEX")
+ds.imprime_resultado(A_aux, b_aux, c_aux, tipo_variavel, base_indices)
 
 
+print('\n'+ '----------------------------------' + '\n')
+print("PROBLEMA DUAL:")
+# todo: Colocar função que imprime o dual aqui
+
+print("RESULTADO PARA O PROBLEMA DUAL")
+variaveis_dual = ds.calcular_valores_dual(A_aux, c_aux,base_indices)
+print("Variáveis do dual: ", variaveis_dual)
 print('\n'+ '----------------------------------' + '\n')
 

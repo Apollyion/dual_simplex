@@ -388,7 +388,7 @@ def imprimir_primeira_fase(A, b, c, tipo_variavel):
 # TODO: Função para criar Dual;
 # TODO: Imprimir o Dual;
 # TODO: Resolver o Dual (Usando o Primal);
-# TODO: Imprimir solução otima Primal;
+# XTODO: Imprimir solução otima Primal;
 # TODO: Imprimir solução otima Dual;
 # TODOX: Readme explicando o funcionamento básico e compilação do código;
 # XTODO :PEQUENO RELATÓRIO contendo um breve resumo do simplex.
@@ -531,6 +531,31 @@ def criar_problema_auxiliar(A, b, c, tipo_variavel, base_indices):
     base_indices.append(A_aux.shape[1] - 1)
 
     return A_aux, b_aux, c_aux, tipo_variavel, base_indices
+
+
+def imprime_resultado(A, b, c, tipo_variavel, base_indices):
+    A = np.array(A.copy())
+    m, n = A.shape
+    x_B = np.zeros(n)
+    x_B[base_indices] = np.linalg.solve(A[:, base_indices], b)
+    c = np.array(c.copy())  # Convertendo c em um array NumPy
+    # Verificar se base_indices contém apenas valores válidos
+    if any(i >= n for i in base_indices):
+        raise ValueError("Índices inválidos em base_indices.")
+
+    custo = np.dot(c[base_indices], x_B[base_indices])
+
+    print("\n")
+    print("Custo encontrado: {}".format(custo))
+    print("Vetor x: [", end=" ")
+    for i in range(n):
+        if i in base_indices:
+            print("{:.2f},".format(x_B[i]), end="")
+            #print("{:.2f},".format(x_B[i]), end="")
+        else:
+            print("0.00,", end="")
+    print("]")
+
 
 def imprimir_auxiliar(A, b, c, tipo_variavel, base_indices):
     num_variaveis = len(c)
@@ -713,3 +738,19 @@ def simplex(A, b, c, base_indices):
             [i + 1 for i in range(n) if i not in base_indices]))
         B_inv = np.linalg.inv(B)
 
+
+def calcular_valores_dual(A, c, base_indices):
+    A = np.array(A.copy())
+    c = np.array(c.copy())
+    base_indices = base_indices.copy()
+    m, n = A.shape
+
+
+    B = A[:, base_indices]  # Matriz básica
+    c_B = c[base_indices]  # Coeficientes da função objetivo das variáveis básicas
+
+    inv_B = np.linalg.inv(B)  # Inversa da matriz básica
+
+    valores_dual = c_B.T @ inv_B  # Valores das variáveis do problema dual
+
+    return valores_dual
