@@ -211,7 +211,11 @@ def transformar_padrao(A, b, c, tipo_problema, sinais_variaveis, sinal_restricao
 def imprimir_forma_padrao(A, b, c, tipo_variavel):
     num_variaveis = len(c)
     num_restricoes = len(b)
+    A = np.array(A.copy())
+    A = np.where(np.logical_or(A == 0, A == -0), 0, A)
+    A = list(A)
 
+    count_f = 1
     # Imprimir a função objetivo
     objetivo = ""
     if c[0] >= 0 and tipo_variavel[0] == 0:
@@ -224,45 +228,53 @@ def imprimir_forma_padrao(A, b, c, tipo_variavel):
         elif c[i] < 0 and tipo_variavel[i] == 0:
             objetivo += " -{}x{}".format(-c[i], i + 1)
         elif c[i] >= 0 and tipo_variavel[i] == 'f':
-            objetivo += " +{}f{}1".format(c[i], i + 1)
+            objetivo += " +{}f{}".format(c[i], count_f)
+            count_f += 1
         elif c[i] < 0 and tipo_variavel[i] == 'f':
-            objetivo += " -{}f{}1".format(-c[i], i + 1)
+            objetivo += " -{}f{}".format(-c[i], count_f)
+            count_f += 1
     print("Min ", objetivo)
 
     # Imprimir as restrições
     print("s.t:")
     for i in range(num_restricoes):
         restricao = ""
-        if A[i][0] > 0 and tipo_variavel[0] == 0:
+        if A[i][0] >= 0 and tipo_variavel[0] == 0:
             restricao += " {}x{}".format(A[i][0], 1)
-        elif A[i][0] <= 0 and tipo_variavel[0] == 0:
+        elif A[i][0] < 0 and tipo_variavel[0] == 0:
             restricao += " -{}x{}".format(-A[i][0], 1)
-        elif A[i][0] > 0 and tipo_variavel[0] == 'f':
-            restricao += " {}f{}1".format(A[i][0], 1)
-        elif A[i][0] <= 0 and tipo_variavel[0] == 'f':
-            restricao += " -{}f{}1".format(-A[i][0], 1)
+        elif A[i][0] >= 0 and tipo_variavel[0] == 'f':
+            restricao += " {}f{}".format(A[i][0], 1)
+        elif A[i][0] < 0 and tipo_variavel[0] == 'f':
+            restricao += " -{}f{}".format(-A[i][0], 1)
 
         f = 1
         for j in range(1, num_variaveis):
-            if A[i][j] > 0 and tipo_variavel[j] == 0:
+            if A[i][j] >= 0 and tipo_variavel[j] == 0:
                 restricao += " +{}x{}".format(A[i][j], j + 1)
-            elif A[i][j] <= 0 and tipo_variavel[j] == 0:
+            elif A[i][j] < 0 and tipo_variavel[j] == 0:
                 restricao += " -{}x{}".format(-A[i][j], j + 1)
-            elif A[i][j] > 0 and tipo_variavel[j] == 'f':
+            elif A[i][j] >= 0 and tipo_variavel[j] == 'f':
                 restricao += " +{}f{}".format(A[i][j], f)
                 f += 1
-            elif A[i][j] <= 0 and tipo_variavel[j] == 'f':
+            elif A[i][j] < 0 and tipo_variavel[j] == 'f':
                 restricao += " -{}f{}".format(-A[i][j], f)
                 f += 1
         restricao += " = {}".format(b[i])
         print('\t' + restricao)
 
     # Imprimir as condições de não negatividade
+    print("\t\t", end="")
+    f_f = 1
     for i in range(num_variaveis):
-        print("\t\t" + "x{},".format(i + 1), end="")
+        if tipo_variavel[i] == 0:
+            print("x{},".format(i + 1), end=" ")
+        elif tipo_variavel[i] == 'f':
+            print("f{},".format(f_f), end=" ")
+            f_f += 1
+    print(">= 0", end=" ")
 
-    # Imprimindo variaveis de folga
-    print(" >= 0")
+
 
 
 # Tenho a forma padrão, agora preciso criar a primeira fase
@@ -301,14 +313,20 @@ def cria_primeira_fase(A, c, tipo_variavel):
 
 # Função para imprimir a primeira fase
 def imprimir_primeira_fase(A, b, c, tipo_variavel):
-    # Imprimir a função objetivo que é minimizar a soma de todas as variáveis 'y'
     num_variaveis = len(c)
     num_restricoes = len(b)
+    num_variaveis_y = num_variaveis - num_restricoes  # numero de variáveis y
 
-    objetivo = ""
+    A = np.array(A.copy())
+    A = np.where(np.logical_or(A == 0, A == -0), 0, A)
+    A = list(A)
+
+
+
+    objetivo = "\t" * (num_variaveis_y-num_variaveis)
     for i in range(num_variaveis):
         if tipo_variavel[i] == 'y':
-            objetivo += " +{}y{}".format(c[i], i + 1)
+            objetivo += " +{}y{}".format(c[i], i + 1 - num_variaveis_y)
         else:
             objetivo += " "
     print("Min ", objetivo)
@@ -319,32 +337,32 @@ def imprimir_primeira_fase(A, b, c, tipo_variavel):
     print("s.t:")
     for i in range(num_restricoes):
         restricao = ""
-        if A[i][0] > 0 and tipo_variavel[0] == 0:
+        if A[i][0] >= 0 and tipo_variavel[0] == 0:
             restricao += " {}x{}".format(A[i][0], 1)
-        elif A[i][0] <= 0 and tipo_variavel[0] == 0:
+        elif A[i][0] < 0 and tipo_variavel[0] == 0:
             restricao += " -{}x{}".format(-A[i][0], 1)
-        elif A[i][0] > 0 and tipo_variavel[0] == 'f':
+        elif A[i][0] >= 0 and tipo_variavel[0] == 'f':
             restricao += " {}f{}1".format(A[i][0], 1)
-        elif A[i][0] <= 0 and tipo_variavel[0] == 'f':
+        elif A[i][0] < 0 and tipo_variavel[0] == 'f':
             restricao += " -{}f{}1".format(-A[i][0], 1)
 
         f = 1
         y = 1
         for j in range(1, num_variaveis):
-            if A[i][j] > 0 and tipo_variavel[j] == 0:
+            if A[i][j] >= 0 and tipo_variavel[j] == 0:
                 restricao += " +{}x{}".format(A[i][j], j + 1)
-            elif A[i][j] <= 0 and tipo_variavel[j] == 0:
+            elif A[i][j] < 0 and tipo_variavel[j] == 0:
                 restricao += " -{}x{}".format(-A[i][j], j + 1)
-            elif A[i][j] > 0 and tipo_variavel[j] == 'f':
+            elif A[i][j] >= 0 and tipo_variavel[j] == 'f':
                 restricao += " +{}f{}".format(A[i][j], f)
                 f += 1
-            elif A[i][j] <= 0 and tipo_variavel[j] == 'f':
+            elif A[i][j] < 0 and tipo_variavel[j] == 'f':
                 restricao += " -{}f{}".format(-A[i][j], f)
                 f += 1
-            elif A[i][j] > 0 and tipo_variavel[j] == 'y':
+            elif A[i][j] >= 0 and tipo_variavel[j] == 'y':
                 restricao += " +{}y{}".format(A[i][j], y)
                 y += 1
-            elif A[i][j] <= 0 and tipo_variavel[j] == 'y':
+            elif A[i][j] < 0 and tipo_variavel[j] == 'y':
                 restricao += " -{}y{}".format(-A[i][j], y)
                 y += 1
         restricao += " = {}".format(b[i])
@@ -352,16 +370,35 @@ def imprimir_primeira_fase(A, b, c, tipo_variavel):
 
     # Imprimir as condições de não negatividade
     print("\t\t", end="")
+    f_f = 1
     for i in range(num_variaveis):
-        print(" " + "x{},".format(i + 1), end="")
+        if tipo_variavel[i] == 0:
+            print("x{},".format(i + 1), end=" ")
+        elif tipo_variavel[i] == 'f':
+            print("f{},".format(f_f), end=" ")
+            f_f += 1
     for i in range(num_restricoes):
         print(" " + "y{},".format(i + 1), end="")
     print(" >= 0")
+
+# XTODO: Corrigir funções de impressão
+# XTODO: Função para ler o arquivo txt
+# xTODO: Imprimir o Auxiliar
+# xTODO: Mostrar as soluções basicas por iteração (Para o Auxiliar e para o Primal)
+# TODO: Função para criar Dual;
+# TODO: Imprimir o Dual;
+# TODO: Resolver o Dual (Usando o Primal);
+# TODO: Imprimir solução otima Primal;
+# TODO: Imprimir solução otima Dual;
+# TODOX: Readme explicando o funcionamento básico e compilação do código;
+# XTODO :PEQUENO RELATÓRIO contendo um breve resumo do simplex.
+
 
 
 # FINALMENTE IMPLEMTANDO O SIMPLEX
 # Função para resolver o simplex primeira fase
 def simplex_primeira_fase(A, b, c, tipo_variavel):
+    itercao = 1
     A = np.array(A.copy())
     b = np.array(b.copy())
     c = np.array(c.copy())
@@ -388,6 +425,8 @@ def simplex_primeira_fase(A, b, c, tipo_variavel):
     org_B = [i for i in range(len(N[0]), len(N[0]) + len(B[0]))]
 
     # Roda o simplex até encontrar o otimo ou parar por inviabilidade
+    print("\n")
+    print("Iteração {}".format(itercao) + " | Colunas Basicas: {}".format([i+1 for i in base_indices]) + " | Colunas Não Basicas: {}".format([i+1 for i in range(n) if i not in base_indices]))
     while True:
         # Calcula a
         # Realiza o teste de otimalidade
@@ -444,6 +483,10 @@ def simplex_primeira_fase(A, b, c, tipo_variavel):
         B[:, k] = N[:,j].copy()
         N[:, j] = B_aux
 
+        itercao += 1
+        print("Iteração {}".format(itercao) + " | Colunas Basicas: {}".format([i+1 for i in base_indices]) + " 1| Colunas Não Basicas: {}".format([i+1 for i in range(n) if i not in base_indices]))
+
+
         B_inv = np.linalg.inv(B)
 
 
@@ -489,6 +532,102 @@ def criar_problema_auxiliar(A, b, c, tipo_variavel, base_indices):
 
     return A_aux, b_aux, c_aux, tipo_variavel, base_indices
 
+def imprimir_auxiliar(A, b, c, tipo_variavel, base_indices):
+    num_variaveis = len(c)
+    num_restricoes = len(b)
+    A = np.array(A.copy())
+    A = np.where(np.logical_or(A == 0, A == -0), 0, A)
+    A = list(A)
+
+    count_f = 1
+    count_y = 1
+    # Imprimir a função objetivo
+    objetivo = ""
+    if c[0] >= 0 and tipo_variavel[0] == 0:
+        objetivo += " {}x{}".format(c[0], 1)
+    elif c[0] < 0 and tipo_variavel[0] == 0:
+        objetivo += " -{}x{}".format(-c[0], 1)
+    for i in range(1, num_variaveis):
+        if c[i] >= 0 and tipo_variavel[i] == 0:
+            objetivo += " +{}x{}".format(c[i], i + 1)
+        elif c[i] < 0 and tipo_variavel[i] == 0:
+            objetivo += " -{}x{}".format(-c[i], i + 1)
+        elif c[i] >= 0 and tipo_variavel[i] == 'f':
+            objetivo += " +{}f{}".format(c[i], count_f)
+            count_f += 1
+        elif c[i] < 0 and tipo_variavel[i] == 'f':
+            objetivo += " -{}f{}".format(-c[i], count_f)
+            count_f += 1
+        elif c[i] >= 0 and tipo_variavel[i] == 'y':
+            objetivo += " +{}y{}".format(c[i], count_y)
+            count_y += 1
+        elif c[i] < 0 and tipo_variavel[i] == 'y':
+            objetivo += " -{}y{}".format(-c[i], count_y)
+            count_y += 1
+        else:
+            objetivo += " +{}{}".format(c[i], tipo_variavel[i])
+    print("Min ", objetivo)
+
+    # Imprimir as restrições
+    print("s.t:")
+    for i in range(num_restricoes):
+        restricao = ""
+        if A[i][0] >= 0 and tipo_variavel[0] == 0:
+            restricao += " {}x{}".format(A[i][0], 1)
+        elif A[i][0] < 0 and tipo_variavel[0] == 0:
+            restricao += " -{}x{}".format(-A[i][0], 1)
+        elif A[i][0] >= 0 and tipo_variavel[0] == 'f':
+            restricao += " {}f{}".format(A[i][0], 1)
+        elif A[i][0] < 0 and tipo_variavel[0] == 'f':
+            restricao += " -{}f{}".format(-A[i][0], 1)
+        else:
+            restricao += " +{}z".format(A[i][0])
+
+        f = 1
+        y = 1
+        for j in range(1, num_variaveis):
+            if A[i][j] >= 0 and tipo_variavel[j] == 0:
+                restricao += " +{}x{}".format(A[i][j], j + 1)
+            elif A[i][j] < 0 and tipo_variavel[j] == 0:
+                restricao += " -{}x{}".format(-A[i][j], j + 1)
+            elif A[i][j] >= 0 and tipo_variavel[j] == 'f':
+                restricao += " +{}f{}".format(A[i][j], f)
+                f += 1
+            elif A[i][j] < 0 and tipo_variavel[j] == 'f':
+                restricao += " -{}f{}".format(-A[i][j], f)
+                f += 1
+            elif A[i][j] >= 0 and tipo_variavel[j] == 'y':
+                restricao += " +{}y{}".format(A[i][j], y)
+                y += 1
+            elif A[i][j] < 0 and tipo_variavel[j] == 'y':
+                restricao += " -{}y{}".format(-A[i][j], y)
+                y += 1
+            else:
+                restricao += " +{}z".format(A[i][j])
+        restricao += " = {}".format(b[i])
+        print('\t' + restricao)
+
+    # Imprimir as condições de não negatividade
+    f_f = 1
+    y_y = 1
+    print("\t\t\t", end="")
+    for i in range(num_variaveis):
+        if tipo_variavel[i] == 0:
+            print("x{},".format(i + 1), end=" ")
+        elif tipo_variavel[i] == 'f':
+            print("f{},".format(f_f), end=" ")
+            f_f += 1
+        elif tipo_variavel[i] == 'y':
+            print("y{},".format(y_y), end=" ")
+            y_y += 1
+        else:
+            print("z,", end=" ")
+
+    # Imprimindo variaveis de folga
+    print(" >= 0")
+
+
+
 
 def simplex(A, b, c, base_indices):
     A = np.array(A.copy())
@@ -513,7 +652,11 @@ def simplex(A, b, c, base_indices):
     org_B = base_indices.copy()
     # org_N vai receber o tamanho do vetor de C exceto os indices da base
     org_N = [i for i in range(len(c)) if i not in base_indices]
-
+    itercao = 1
+    print("\n")
+    print("Iteração {}".format(itercao) + " | Colunas Basicas: {}".format(
+        [i + 1 for i in base_indices]) + " | Colunas Não Basicas: {}".format(
+        [i + 1 for i in range(n) if i not in base_indices]))
     while True:
         # Calcula a
         # Realiza o teste de otimalidade
@@ -564,6 +707,9 @@ def simplex(A, b, c, base_indices):
         B_aux = B[:,k].copy()
         B[:, k] = N[:,j].copy()
         N[:, j] = B_aux
-
+        itercao += 1
+        print("Iteração {}".format(itercao) + " | Colunas Basicas: {}".format(
+            [i + 1 for i in base_indices]) + " | Colunas Não Basicas: {}".format(
+            [i + 1 for i in range(n) if i not in base_indices]))
         B_inv = np.linalg.inv(B)
 
