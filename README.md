@@ -2,6 +2,10 @@
 
 Este readme fornece informações sobre como utilizar o código para solucionar o algoritmo simplex. Siga as instruções abaixo para garantir uma execução correta.
 
+# Nomes e matrículas:
+Evecleison Albuquerque do Nascimento - 494131
+Lucas José Lemos Braz - 471993
+
 ## Requisitos
 
 - Python 3.9 ou superior
@@ -32,6 +36,12 @@ python main.py
 ```
 
 4. Quando solicitado, digite o nome do arquivo, **sem a extensão .txt**, que contém o problema que deseja resolver.
+
+5. **CASO O PROBLEMA SEJA INVIÁVEL OU ILIMITADO, NÃO SERÁ APRESENTADA A FASE SEGUINTE.**
+
+6. Caso o problema seja viável e o programa peça para digitar uma solução básica para o dual, digite os números
+   referentes as variáveis que vão entrar na base separados por espaço. Ex:1 3 5. Obs: a primeira coluna
+   corresponde ao valor 0 e última coluna m-1, sendo m o número de restrições do dual.
 
 O código será executado e o algoritmo simplex solucionará o problema presente no arquivo de texto.
 

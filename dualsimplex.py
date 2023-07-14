@@ -4,6 +4,7 @@
 import numpy as np
 #import pandas as pd
 import math
+import sys
 
 
 # Função para ler o arquivo de entrada e retornar a matrix A e os vetores b e c, tipo de prob e número de variáveis e
@@ -140,6 +141,10 @@ def transformar_variaveis_nao_negativas(A, b, c, sinais_variaveis, tipo_variavel
 
     num_variaveis = A.shape[1]
     num_restricoes = A.shape[0]
+
+    if num_variaveis != len(sinais_variaveis):
+        print("ERRO: O PROBLEMA ESTÁ FORA DO PADRÃO.")
+        sys.exit()
 
     # Transformar variáveis negativas
     for i in range(num_variaveis):
@@ -437,7 +442,7 @@ def simplex_primeira_fase(A, b, c, tipo_variavel):
                 return B_inv, B, N, c_B, c_N, base_indices, org_B, org_N
             else:
                 print("Problema inviável")
-                return
+                return None, None, None, None, None, None, None, None
 
         # Seleciona o indice j, pegando um valor negativo do vetor otimo que tenha o menor indice referente a org_N
 
@@ -555,6 +560,25 @@ def imprime_resultado(A, b, c, tipo_variavel, base_indices):
         else:
             print("0.00,", end="")
     print("]")
+
+def imprime_resultado_dual(base_indices, A, b, c):
+    A = np.array(A.copy())
+    b = np.array(b.copy())
+    c = np.array(c.copy())
+    
+    m, n = A.shape
+
+    # Construir matriz básica e calcular valores de u
+    B = A[:, base_indices]
+    B_inv = np.linalg.inv(B)
+    u = np.dot(c[base_indices], B_inv)
+
+    # Calcular custo dual
+    dual_cost = np.dot(u, b)
+
+    # Imprimir resultados
+    print("Custo Dual: ", dual_cost)
+    print("Valores de u: ", u)
 
 
 def imprimir_auxiliar(A, b, c, tipo_variavel, base_indices):
@@ -754,3 +778,141 @@ def calcular_valores_dual(A, c, base_indices):
     valores_dual = c_B.T @ inv_B  # Valores das variáveis do problema dual
 
     return valores_dual
+
+def dual_simplex(A, c, b, base_indices):
+    A = np.array(A.copy())
+    b = np.array(b.copy())
+    c = np.array(c.copy())
+    m, n = A.shape
+
+    itercao = 1
+    while True:
+        # Passo 1: Calcular os custos relativos
+        B = A[:, base_indices]
+        c_B = c[base_indices]
+        B_inv = np.linalg.inv(B)
+        y = np.dot(c_B, B_inv)
+
+        # Passo 2: Verificar a otimalidade
+        if np.all(B_inv @ b >= 0):
+            return base_indices
+
+        # Passo 3: Encontrar a variável entrante
+        entra = np.argmin(y)
+
+        # Passo 4: Calcular a direção simplex
+        k = np.eye(m)[entra]
+        d = -np.dot(k, B_inv)
+
+        # Passo 5: Verificar a ilimitabilidade
+        if np.all(d >= 0):
+            return "Problema ilimitado"
+
+        # Passo 6: Encontrar a variável saindo
+        ratios = b / d
+        sai = np.argmin(ratios[ratios > 0])
+
+        # Passo 7: Atualizar a base
+        base_indices[sai] = entra
+        print("Iteração {}".format(itercao) + " | Colunas Basicas: {}".format(
+            [i + 1 for i in base_indices]) + " | Colunas Não Basicas: {}".format(
+            [i + 1 for i in range(n) if i not in base_indices]))
+
+# FUnção para criar o dual
+def cria_dual(A, b, c, tipo_variavel):
+    A_aux = np.array(A)
+    b = np.array(b)
+    c = np.array(c)
+
+    # Transposta da matriz A do Pl original na forma padrão
+    linhas = np.shape(A_aux)[0] # linhas da matriz original
+    colunas = np.shape(A_aux)[1] # colunas da matriz original
+    transposta = np.empty((colunas, linhas)) 
+     
+    # e agora vamos preencher a matriz transposta
+    for i in range(np.shape(A_aux)[0]):
+        for j in range(np.shape(A_aux)[1]):
+            transposta[j][i] = A_aux[i][j]
+
+    # Dessa forma, temos a matriz A do dual
+    A = np.array(transposta)
+
+    num_variaveis = len(b)
+    num_restricoes = len(c)
+ 
+    # Manter em mente o tipo de variável
+    tipo_variavel_dual = ['u'] * num_variaveis
+
+    return A, b, c, tipo_variavel_dual
+
+# Função para imprimir o dual
+def imprimir_dual(A, b, c, tipo_variavel):
+    num_variaveis = len(b)
+    num_restricoes = len(c)
+    A = np.array(A.copy())
+    A = np.where(np.logical_or(A == 0, A == -0), 0, A)
+    A = list(A)
+
+    # Imprimir a função objetivo
+    objetivo = ""
+    if b[0] >= 0 and tipo_variavel[0] == 'u':
+        objetivo += " {}u{}".format(b[0], 1)
+    elif b[0] < 0 and tipo_variavel[0] == 'u':
+        objetivo += " -{}u{}".format(-b[0], 1)
+    for i in range(1, num_variaveis):
+        if b[i] >= 0 and tipo_variavel[i] == 'u':
+            objetivo += " +{}u{}".format(b[i], i + 1)
+        elif b[i] < 0 and tipo_variavel[i] == 'u':
+            objetivo += " -{}u{}".format(-b[i], i + 1)
+        
+    print("Max ", objetivo)
+    
+
+    # Imprimir as restrições
+    print("s.t:")
+    for i in range(num_restricoes):
+        restricao = ""
+        if A[i][0] >= 0 and tipo_variavel[0] == 'u':
+            restricao += " {}u{}".format(A[i][0], 1)
+        elif A[i][0] < 0 and tipo_variavel[0] == 'u':
+            restricao += " -{}u{}".format(-A[i][0], 1)
+        
+        for j in range(1, num_variaveis):
+            if A[i][j] >= 0 and tipo_variavel[j] == 'u':
+                restricao += " +{}u{}".format(A[i][j], j + 1)
+            elif A[i][j] < 0 and tipo_variavel[j] == 'u':
+                restricao += " -{}u{}".format(-A[i][j], j + 1)
+           
+        restricao += " <= {}".format(c[i])
+        print('\t' + restricao)
+
+    # Imprimir as condições de livre
+    print("\t\t", end="")
+    
+    for i in range(num_variaveis):
+        if tipo_variavel[i] == 'u':
+            print("u{},".format(i + 1), end=" ")
+        
+    print(" livre", end=" ")
+
+    
+def solucao_eh_viavel(base_dual, A, c):
+    base_dual = [int(ele) for ele in base_dual.split(" ")]
+    base_dual = np.array(base_dual.copy())
+
+    A = np.array(A.copy())
+    c = np.array(c.copy())
+
+    # Verifica se é invertivel
+    try :
+        inv_B_dual = np.linalg.inv(A[:, base_dual])
+    except:
+        return False
+    #Calcula valores de u
+    u_dual = c[base_dual] @ inv_B_dual
+
+    #Verifica condição U_dual . A <= c
+    if all(u_dual @ A <= c):
+        return True
+    else:
+        return False
